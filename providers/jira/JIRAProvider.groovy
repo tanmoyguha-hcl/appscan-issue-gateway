@@ -82,7 +82,10 @@ class JIRAProvider extends JIRAConstants implements IProvider {
 		
 		//Set a default summary if one doesn't exist
 		if (config.get(SUMMARY) == null) {
-			config.put(SUMMARY, "AppScan: %IssueType% found at %Location%");
+            if (config.get(FIX_GROUP_BASED) != null && config.get(FIX_GROUP_BASED))
+                config.put(SUMMARY, "AppScan (Fix Group): %IssueType% found at %Subject%");
+            else
+			    config.put(SUMMARY, "AppScan: %IssueType% found at %Location%");
 		}
 		
 		//Set a default issuetype if one doesn't exist
@@ -115,10 +118,26 @@ class JIRAProvider extends JIRAConstants implements IProvider {
 			def attachUrl = config.get(SERVER_URL) + API_ADDATTACHMENT.replace("{issueKey}", jiraIssueKey)
 			def issueDetails = appscanIssue.issueDetails
 			def jiraHeaders = ['X-Atlassian-Token':'no-check']
-			postResultText = RESTUtils.postMultiPartFileUpload(attachUrl, authorization, issueDetails, "IssueDetails-" + jiraIssueKey + ".html", jiraHeaders, errors)
-			if (postResultText == null) {
-				errors.add("Something went wrong while attaching report to JIRA issue at " + attachUrl);
-			}
+            if (issueDetails == null) {  //  Todo
+                errors.add("Attachment not Available for Created Issue: " + jiraIssueKey);
+            } else {
+			    postResultText = RESTUtils.postMultiPartFileUpload(attachUrl, authorization, issueDetails, "IssueDetails-" + jiraIssueKey + ".html", jiraHeaders, errors)
+			    if (postResultText == null) {
+				    errors.add("Something went wrong while attaching report to JIRA issue at " + attachUrl);
+			    }
+            }
+
+            if (config.get(FIX_GROUP_BASED) != null && config.get(FIX_GROUP_BASED)) {
+                def issuesMetadataDetails = appscanIssue.issuesMetadataDetails
+                if (issuesMetadataDetails == null) {
+                    errors.add("Issues Metadata Attachment not available for Created Issue: " + jiraIssueKey);
+                } else {
+                    postResultText = RESTUtils.postMultiPartFileUpload(attachUrl, authorization, issuesMetadataDetails, "IssuesMetadata-" + jiraIssueKey + ".html", jiraHeaders, errors)
+                    if (postResultText == null) {
+                        errors.add("Something went wrong while attaching IssuesMetadata List to JIRA issue at " + attachUrl);
+                    }
+                }
+            }
 			
 			def jiraIssue = config.getAt(SERVER_URL) + "/browse/" + createdIssue.key
 			// ASE issuedetails API returns "id" while the ASOC issues API returns "Id"
@@ -154,15 +173,22 @@ class JIRAProvider extends JIRAConstants implements IProvider {
 		def severityField = Utils.escape(config.get(SEVERITYFIELD))
 			
 		//Must use \\n instead of \n for newlines when submitting to JIRA's REST API
-		String description = appscanIssue.get("Scanner") + " found a " + severity + " priority issue"
+		String description = (appscanIssue.get("Scanner") != null ? appscanIssue.get("Scanner") : "") + " found a " + severity + " priority issue"
         description += "\\n{quote}"
 		description += "\\n*Issue Type*: " + Utils.escape(appscanIssue.get(issueTypeString))
-		description += "\\n*Location*: "   + Utils.escape(appscanIssue.get("Location"))
-		description += "\\n*Scan Name*: "  + Utils.escape(appscanIssue.get(scanNameString))
+        if (config.get(FIX_GROUP_BASED) != null && config.get(FIX_GROUP_BASED)) {
+            description += "\\n*Location*: " + Utils.escape(appscanIssue.get("Subject"))
+        } else {
+            description += "\\n*Location*: " + Utils.escape(appscanIssue.get("Location"))
+            description += "\\n*Scan Name*: " + Utils.escape(appscanIssue.get(scanNameString))
+        }
 		description += "\\n{quote}"
 		description += "\\nSee the attached report for more information"
 	
 		def summary = computeSummary(appscanIssue, config)
+        if (summary.toString().length() > 254)  {
+            summary = summary.substring(0, 254);
+        }
 		
 		def otherfields = "";
 		if (config.get(OTHERFIELDS) != null) {

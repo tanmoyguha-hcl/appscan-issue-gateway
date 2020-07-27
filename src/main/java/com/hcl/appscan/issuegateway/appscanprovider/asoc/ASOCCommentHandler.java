@@ -47,29 +47,31 @@ public class ASOCCommentHandler {
 	}
 
 	public void submitComments(PushJobData jobData, List<String> errors, Map<String, String> results) {
-
 		for (Entry<String, String> result : results.entrySet()) {
 			// Only handle result entries that have a value that starts with "http" (A link to a defect)
 			if (!result.getValue().startsWith("http")) {
 				break;
 			}
+            submitComment(jobData, errors, result, result.getKey());
+        }
+	}
 
-			String url = jobData.getAppscanData().getUrl() + REST_COMMENT.replace("ISSUEID", result.getKey());
+    protected void submitComment(PushJobData jobData, List<String> errors, Entry<String, String> result, String issueId) {
+        String url = jobData.getAppscanData().getUrl() + REST_COMMENT.replace("ISSUEID", issueId);
 
-			RestTemplate restTemplate = ASOCUtils.createASOCRestTemplate();
-			HttpHeaders headers = ASOCUtils.createASOCAuthorizedHeaders(jobData);
-			Comment comment = new Comment();
-			comment.Comment = getCommentToken() + " created the following issue:\n" + result.getValue();
-			HttpEntity<Comment> entity = new HttpEntity<>(comment, headers);
-			ResponseEntity<String> responseEntity = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
-			if (!responseEntity.getStatusCode().is2xxSuccessful()) {
-				errors.add("An error occured adding a comment to an AppScan issue. A status code of "
-						+ responseEntity.getStatusCodeValue() + " was received from " + url);
-			}
+        RestTemplate restTemplate = ASOCUtils.createASOCRestTemplate();
+        HttpHeaders headers = ASOCUtils.createASOCAuthorizedHeaders(jobData);
+        Comment comment = new Comment();
+        comment.Comment = getCommentToken() + " created the following issue:\n" + result.getValue();
+        HttpEntity<Comment> entity = new HttpEntity<>(comment, headers);
+        ResponseEntity<String> responseEntity = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
+        if (!responseEntity.getStatusCode().is2xxSuccessful()) {
+            errors.add("An error occured adding a comment to an AppScan issue. A status code of "
+                    + responseEntity.getStatusCodeValue() + " was received from " + url);
 		}
 	}
 
-	private static class Comment {
+    private static class Comment {
 		public String Comment;
 	}
 }

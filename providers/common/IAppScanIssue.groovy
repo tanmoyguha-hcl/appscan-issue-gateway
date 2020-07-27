@@ -18,6 +18,8 @@ interface IAppScanIssue {
 
 	File getIssueDetails()
 
+    File getIssuesMetadataDetails()
+
 	String get(String name)
 
 }

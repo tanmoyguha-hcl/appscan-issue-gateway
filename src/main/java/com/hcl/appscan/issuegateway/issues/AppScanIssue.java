@@ -17,6 +17,7 @@ import common.IAppScanIssue;
 public class AppScanIssue implements IAppScanIssue {
 
 	private File issueDetails;
+	private File issuesMetadataDetails;
 	private Map<String, String> issueFields = new HashMap<>();
 
 	@Override
@@ -29,6 +30,15 @@ public class AppScanIssue implements IAppScanIssue {
 	public void set(String name, String value) {
 		issueFields.put(name, value);
 	}
+
+	@Override
+    public File getIssuesMetadataDetails() {
+        return issuesMetadataDetails;
+    }
+
+    public void setIssuesMetadataDetails(File issuesMetadataDetails) {
+        this.issuesMetadataDetails = issuesMetadataDetails;
+    }
 
 	@Override
 	public File getIssueDetails() {

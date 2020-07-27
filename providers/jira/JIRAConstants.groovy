@@ -22,6 +22,9 @@ public class JIRAConstants {
 	static def SEVERITYMAP   = "severitymap"
 	static def SUMMARY       = "summary"
 	static def OTHERFIELDS   = "otherfields"
+
+    //Flag
+    static def FIX_GROUP_BASED = "fixGroupBased"
 	
 	//Description
 	static def PROVIDER_DESCRIPTION =

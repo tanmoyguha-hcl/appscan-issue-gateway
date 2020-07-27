@@ -61,7 +61,7 @@ public class ASOCIssueRetrievalHandler implements IIssueRetrievalHandler {
 		return new AppScanIssue[0];
 	}
 
-	private String getStateFilters(String userInput) {
+	protected String getStateFilters(String userInput) {
 		String[] states = userInput.split(",");
 		StringBuilder stateFilterBuilder = new StringBuilder();
 		for (String state : states) {
@@ -76,7 +76,7 @@ public class ASOCIssueRetrievalHandler implements IIssueRetrievalHandler {
 		return stateFilter;
 	}
 
-	private List<String> getPolicyIds(PushJobData jobData) {
+	protected List<String> getPolicyIds(PushJobData jobData) {
 		List<String> policyIds = new ArrayList<>();
 		// If the user passed in some policy ids, use them. If not go figure out the
 		// application's registered policies

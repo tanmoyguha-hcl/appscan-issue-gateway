@@ -58,18 +58,16 @@ public class ASOCReportHandler {
 		}
 	}
 
-	private String postReportJob(PushJobData jobData, String issueId, List<String> errors) {
+	protected String postReportJob(PushJobData jobData, String issueId, List<String> errors) {
 		String url = jobData.getAppscanData().getUrl()
 				+ REST_CREATE_REPORT.replace("APPID", jobData.getAppscanData().getAppid());
 
 		RestTemplate restTemplate = ASOCUtils.createASOCRestTemplate();
 		HttpHeaders headers = ASOCUtils.createASOCAuthorizedHeaders(jobData);
 
-		CreateReportRequest createReportRequest = new CreateReportRequest();
-		createReportRequest.OdataFilter = "Id eq '" + issueId + "'";
-		createReportRequest.Configuration = new CreateReportRequestConfiguration();
+        CreateReportRequest createReportRequest = getCreateReportRequest(jobData, issueId);
 
-		HttpEntity<CreateReportRequest> entity = new HttpEntity<>(createReportRequest, headers);
+        HttpEntity<CreateReportRequest> entity = new HttpEntity<>(createReportRequest, headers);
 		ResponseEntity<ReportJobResponse> responseEntity = restTemplate.exchange(url, HttpMethod.POST, entity,
 				ReportJobResponse.class);
 		if (responseEntity.getStatusCode().is2xxSuccessful()) {
@@ -80,7 +78,14 @@ public class ASOCReportHandler {
 		return null;
 	}
 
-	private boolean waitForReportJob(PushJobData jobData, String reportId) {
+    protected CreateReportRequest getCreateReportRequest(PushJobData jobData, String issueId) {
+        CreateReportRequest createReportRequest = new CreateReportRequest();
+        createReportRequest.OdataFilter = "Id eq '" + issueId + "'";
+        createReportRequest.Configuration = new CreateReportRequestConfiguration();
+        return createReportRequest;
+    }
+
+    protected boolean waitForReportJob(PushJobData jobData, String reportId) {
 		String url = jobData.getAppscanData().getUrl() + REST_REPORT_STATUS.replace("REPORTID", reportId);
 
 		for (long stop = System.nanoTime() + TimeUnit.MINUTES.toNanos(2); stop > System.nanoTime(); ) {
@@ -102,7 +107,7 @@ public class ASOCReportHandler {
 		return false;
 	}
 
-	private File downloadReport(PushJobData jobData, String reportId, List<String> errors) throws IOException {
+	protected File downloadReport(PushJobData jobData, String reportId, List<String> errors) throws IOException {
 		String url = jobData.getAppscanData().getUrl() + REST_REPORT_DOWNLOAD.replace("REPORTID", reportId);
 
 		List<HttpMessageConverter<?>> messageConverters = new ArrayList<>();
@@ -130,14 +135,14 @@ public class ASOCReportHandler {
 	}
 
 	@SuppressWarnings("unused")
-	private static class CreateReportRequest {
+	protected static class CreateReportRequest {
 		public String OdataFilter;
 		public String[] PolicyIds = new String[]{"00000000-0000-0000-0000-000000000000"};
 		public CreateReportRequestConfiguration Configuration;
 	}
 
 	@SuppressWarnings("unused")
-	private static class CreateReportRequestConfiguration {
+	protected static class CreateReportRequestConfiguration {
 		public boolean Summary = true;
 		public boolean Details = true;
 		public boolean Discussion = true;
@@ -154,7 +159,7 @@ public class ASOCReportHandler {
 	}
 
 	@SuppressWarnings("unused")
-	private static class ReportJobResponse {
+	protected static class ReportJobResponse {
 		public String Id;
 		public String Status;
 		public String Message;

@@ -78,6 +78,12 @@ public class PushJobData {
 		@ApiModelProperty(position = 11, required = false, value = "Other internal debug or demo settings")
 		private Map<String, String> other;
 
+        @ApiModelProperty(position = 12, required = false, value = "Create DTS Issues based on Fixed Groups")
+        private Boolean fixGroupBased = false;
+
+        @ApiModelProperty(position = 13, required = false, value = "Create DTS Issues under Fixed Group Id")
+        private String fixGroupId;
+
 		public String getAppscanProvider() {
 			return appscanProvider;
 		}
@@ -165,7 +171,23 @@ public class PushJobData {
 		public void setOther(Map<String, String> other) {
 			this.other = other;
 		}
-	}
+
+        public Boolean getFixGroupBased() {
+            return fixGroupBased;
+        }
+
+        public void setFixGroupBased(Boolean fixGroupBased) {
+            this.fixGroupBased = fixGroupBased;
+        }
+
+        public String getFixGroupId() {
+            return fixGroupId;
+        }
+
+        public void setFixGroupId(String fixGroupId) {
+            this.fixGroupId = fixGroupId;
+        }
+    }
 
 	static public class IMData {
 

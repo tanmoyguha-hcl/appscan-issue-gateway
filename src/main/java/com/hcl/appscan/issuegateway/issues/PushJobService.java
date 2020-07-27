@@ -4,6 +4,7 @@
  */
 package com.hcl.appscan.issuegateway.issues;
 
+import com.hcl.appscan.issuegateway.appscanprovider.asoc.ASOCFixGroupProvider;
 import org.springframework.stereotype.Service;
 
 import com.hcl.appscan.issuegateway.appscanprovider.IAppScanProvider;
@@ -49,7 +50,10 @@ public class PushJobService {
 		if (submitJobData.getAppscanData().getAppscanProvider().equalsIgnoreCase(ASE)) {
 			appscanProvider = new ASEProvider(submitJobData);
 		} else if (submitJobData.getAppscanData().getAppscanProvider().equalsIgnoreCase(ASOC)) {
-			appscanProvider = new ASOCProvider(submitJobData);
+            Boolean fixGroupBased = submitJobData.getAppscanData().getFixGroupBased();
+            if (fixGroupBased != null && fixGroupBased)
+                appscanProvider = new ASOCFixGroupProvider(submitJobData);
+			else appscanProvider = new ASOCProvider(submitJobData);
 		} else {
 			throw new IllegalArgumentException(
 					"appscanProvider is invalid: " + submitJobData.getAppscanData().getAppscanProvider());
